@@ -1,24 +1,23 @@
+// App.jsx
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+import Navbar from "./components/Navbar";
+import PostCard from "./components/PostCard";
 
-function App() {
-  const [count, setCount] = useState(0);
+export default function App() {
+  const [posts, setPosts] = useState([]);
 
   return (
-    <>
-      <div>
-        <h1>Real News</h1>
-      </div>
-      <div class="alert">
-        <h1>Amazon had a lawsuit!</h1>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="min-h-screen bg-gray-100">
+      <Navbar />
+      <main className="max-w-2xl mx-auto mt-6 space-y-4 px-4">
+        {posts.length > 0 ? (
+          posts.map((post, i) => <PostCard key={i} post={post} />)
+        ) : (
+          <p className="text-center text-gray-500 mt-8">
+            No posts yet. Create one above!
+          </p>
+        )}
+      </main>
+    </div>
   );
 }
-
-export default App;
