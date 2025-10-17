@@ -112,9 +112,12 @@ function serializeAlerts($, baseUrl) {
 
 function writeJson(outdir, url, alerts) {
   ensureDir(outdir);
-  const ts = dayjs().format("YYYYMMDD-HHmmss");
+
+  // Make filename stable (no timestamp)
   const safeHost = new URL(url).hostname.replace(/[^a-z0-9.-]/gi, "_");
-  const file = path.join(outdir, `alerts_${safeHost}_${ts}.json`);
+  const file = path.join(outdir, `alerts_${safeHost}_latest.json`);
+
+  // Write (overwrites existing file)
   fs.writeFileSync(
     file,
     JSON.stringify(
@@ -128,8 +131,10 @@ function writeJson(outdir, url, alerts) {
       2
     )
   );
+
   return file;
 }
+
 
 // ---------- Core ----------
 async function runOnce(url, ua, outdir) {
