@@ -40,9 +40,21 @@ export async function getUUIDByID(id) {
   }
 }
 
-async function getData() {
-  const res = await pool.query(`SELECT * FROM alerts`);
+const alertsTableName = "alerts";
+
+export async function getData() {
+  const res = await pool.query(`SELECT * FROM ${alertsTableName}`);
   console.log(res.rows);
 }
 
-getData();
+export async function addAlert(alert) {
+  const res = await pool.query(
+    `INSERT INTO ${alertsTableName} (alert, user_id) VALUES ($1, $2)`,
+    [alert, 1]
+  );
+
+  console.log(res);
+}
+
+// getData();
+// addAlert("test123");

@@ -4,6 +4,7 @@ import axios from "axios";
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
+  const [alert, setAlert] = useState("");
 
   const BASE_URL = "http://localhost:3000/";
 
@@ -16,8 +17,25 @@ const Dashboard = () => {
     }
   };
 
-  const addAlert = async () => {
-    const response = await fetch(BASE_URL + "addalert");
+  const saveAlert = async () => {
+    const response = await fetch(BASE_URL + "addalert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({ alert }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error fetching data: ", errorData.message);
+      alert(`Error: ${errorData.message}`);
+      return;
+    }
+
+    // const data = await response.json();
+    // console.log(`Data: ${data.uid}`);
   };
 
   useEffect(() => {}, []);
@@ -31,12 +49,14 @@ const Dashboard = () => {
           Fetch Gemini Data
         </Button>
       </div>
+
       <div>
+        <input onChange={(e) => setAlert(e.target.value)} type="text" />
         <Button
-          onClick={() => fetchData()}
+          onClick={() => saveAlert()}
           className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
         >
-          Get Data
+          Save Alert
         </Button>
       </div>
       {data && (
