@@ -1,26 +1,29 @@
-//API imports
-const express = require('express');
-const cors = require('cors');
-//Gemini import
-const { gemini } = require('./gemini.js');
-//Environment variables
-require('dotenv').config();
+import express from "express";
+import dotenv from "dotenv";
+import { Sequelize } from "sequelize";
+import db from "./models/index.js";
+import postRoutes from "./routes/postRoutes.js";
+import cors from "cors";
+dotenv.config();
 
-//create express app
-const app = express();
-const port = process.env.PORT || 3000;
-//CORS configuration
 const origins = ['http://localhost:5173'];
 
+
+
+const app = express();
+app.use(express.json());
+
 app.use(cors({ origin: origins }));
+// Connect to DB
+const sequelize = db.sequelize;
+sequelize.authenticate()
+    .then(() => console.log("✅ Database connected"))
+    .catch(err => console.error("❌ DB connection failed:", err));
 
+// Routes
+app.use("/api/posts", postRoutes);
 
-app.get('/', async (req, res) => {
-    gemini_response = await gemini()
-    res.send(gemini_response);
+app.get("/", (_req, res) => res.send("API running..."));
 
-});
-
-app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-}); 
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
