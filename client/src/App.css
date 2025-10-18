@@ -44,3 +44,14 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Ensure consistent sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.panel-gap {
+  gap: 1.5rem;
+}

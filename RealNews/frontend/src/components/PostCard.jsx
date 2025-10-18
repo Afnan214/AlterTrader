@@ -1,7 +1,7 @@
 // components/PostCard.jsx
 export default function PostCard({ post }) {
   return (
-    <div className="bg-white shadow rounded-xl p-4 space-y-2">
+    <div className=" shadow rounded-xl p-4 space-y-2">
       <h3 className="font-semibold text-gray-800">User123</h3>
       <p className="alert text-gray-700">{post.content}</p>
       {post.image && (
