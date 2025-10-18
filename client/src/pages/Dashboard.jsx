@@ -1,132 +1,130 @@
 import { useEffect, useState } from "react";
 import { Button } from "@headlessui/react";
-import axios from "axios";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
-
 const Dashboard = () => {
-  const [data, setData] = useState(null);
   const [alertText, setAlertText] = useState("");
-  const [alertsUserID, setAlertsUserID] = useState("");
   const [alerts, setAlerts] = useState([]);
+  const [user, setUser] = useState(null);
+  const BASE_URL = "http://localhost:3000/api/alerts";
 
-  const BASE_URL = "http://localhost:3000/";
+  // ✅ Track current Firebase user
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        console.log("✅ Logged in as:", firebaseUser.email);
+        setUser(firebaseUser);
+        fetchAlerts(firebaseUser); // automatically load alerts when logged in
+      } else {
+        console.warn("⚠️ No user logged in");
+        setUser(null);
+        setAlerts([]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
-
+  // ✅ Create a new alert for the logged-in user
   const saveAlert = async () => {
-    const response = await fetch(BASE_URL + "addalert", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({ alert: alertText }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error fetching data: ", errorData.message);
-      alert(`Error: ${errorData.message}`);
+    if (!user) {
+      alert("You must be logged in to save alerts.");
+      return;
+    }
+    if (!alertText.trim()) {
+      alert("Please enter an alert message.");
       return;
     }
 
-    // const data = await response.json();
-    // console.log(`Data: ${data.uid}`);
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch(BASE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ alert: alertText }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error creating alert:", errorData.error);
+        alert(`Error: ${errorData.error}`);
+        return;
+      }
+
+      const newAlert = await response.json();
+      console.log("✅ Created alert:", newAlert);
+
+      setAlerts((prev) => [newAlert, ...prev]);
+      setAlertText(""); // reset field
+    } catch (err) {
+      console.error("Error saving alert:", err);
+      alert("Failed to save alert. Try again.");
+    }
   };
 
-  const getAlerts = async () => {
-    if (!alertsUserID || alertsUserID.trim() === "") {
-      alert("Please enter a user ID");
-      return;
+  // ✅ Fetch all alerts for logged-in user
+  const fetchAlerts = async (firebaseUser = user) => {
+    if (!firebaseUser) return;
+
+    try {
+      const token = await firebaseUser.getIdToken();
+      const response = await fetch(BASE_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        console.error("Error fetching alerts:", await response.text());
+        return;
+      }
+
+      const data = await response.json();
+      console.log("✅ Fetched alerts:", data);
+      setAlerts(data);
+    } catch (err) {
+      console.error("Error fetching alerts:", err);
     }
-
-    let user_id = parseInt(alertsUserID, 10);
-
-    if (isNaN(user_id)) {
-      alert("Please enter a valid number");
-      return;
-    }
-
-    console.log("Sending user_id:", user_id);
-
-    const response = await fetch(BASE_URL + "getalerts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({ user_id }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error fetching data: ", errorData.message);
-      alert(`Error: ${errorData.message}`);
-      return;
-    }
-
-    const data = await response.json();
-    console.log("Received data:", data);
-    setAlerts(data);
   };
 
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, async (user) => {
-  //     if (user) {
-  //       try {
-  //         const token = await user.getIdToken();
-  //         const res = await fetch("http://localhost:3000/api/protected", {
-  //           headers: { Authorization: `Bearer ${token}` },
-  //         });
-  //         const data = await res.json();
-  //         console.log("✅ Protected route data:", data);
-  //       } catch (err) {
-  //         console.error("Error fetching protected data:", err);
-  //       }
-  //     } else {
-  //       console.warn("⚠️ No user logged in. Skipping protected fetch.");
-  //     }
-  //   });
+  // ✅ Refresh alerts when user changes
+  useEffect(() => {
+    if (user) fetchAlerts();
+  }, [user]);
 
-  //   return () => unsubscribe(); // cleanup
-  // }, []);
   return (
-    <div>
-      <div>
-        <input onChange={(e) => setAlertText(e.target.value)} type="text" />
+    <div className="max-w-xl mx-auto mt-10 p-6 rounded shadow">
+      <h1 className="text-2xl font-semibold mb-4 text-center">Your Alerts</h1>
+
+      <div className="flex items-center gap-2 mb-6">
+        <input
+          value={alertText}
+          onChange={(e) => setAlertText(e.target.value)}
+          placeholder="Enter a new alert..."
+          className="flex-grow border p-2 rounded"
+        />
         <Button
-          onClick={() => saveAlert()}
-          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          onClick={saveAlert}
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
         >
-          Save Alert
-        </Button>
-      </div>
-      <div>
-        <input onChange={(e) => setAlertsUserID(e.target.value)} type="text" />
-        <Button
-          onClick={() => getAlerts()}
-          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          Get Alert by user_id
+          Save
         </Button>
       </div>
 
-
-      {alerts && alerts.length > 0 && (
-        <div className="mt-4 p-4 border rounded">
-          <h2 className="text-lg font-semibold mb-2">Alerts:</h2>
-          <ul className="list-disc list-inside">
+      {alerts.length > 0 ? (
+        <div className="p-4 border rounded">
+          <h2 className="text-lg font-semibold mb-2">Your Alerts</h2>
+          <ul className="list-disc list-inside space-y-1">
             {alerts.map((alert, index) => (
-              <li key={alert.id || index} className="mb-2">
-                <span className="font-medium">Alert:</span> {alert.alert}
-                <span className="text-sm text-gray-600 ml-2">
-                  (User ID: {alert.user_id})
-                </span>
+              <li key={alert.id || index} className="text-gray-800">
+                {alert.alert}
               </li>
             ))}
           </ul>
         </div>
+      ) : (
+        <p className="text-gray-500 text-center">No alerts yet. Create one above!</p>
       )}
     </div>
   );

@@ -87,8 +87,8 @@ Reply with:
 📉 *SELL* - to sell  
 ℹ️ *INFO* - more details
 ❌ *DISMISS* - ignore alert`;
-        
-        console.log(message)
+
+      console.log(message)
     }
 
     // optionally handle the answer
@@ -101,4 +101,4 @@ Reply with:
   }
 }
 
-gemini();
+// gemini();
