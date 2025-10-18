@@ -6,24 +6,28 @@ import postRoutes from "./routes/postRoutes.js";
 import cors from "cors";
 dotenv.config();
 
-const origins = ['http://localhost:5173'];
-
-
+const origins = ["http://localhost:5173", "http://localhost:5174"];
 
 const app = express();
 app.use(express.json());
 
-app.use(cors({ origin: origins }));
-// Connect to DB
+app.use(
+  cors({
+    origin: "http://localhost:5174",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 const sequelize = db.sequelize;
-sequelize.authenticate()
-    .then(() => console.log("✅ Database connected"))
-    .catch(err => console.error("❌ DB connection failed:", err));
+sequelize
+  .authenticate()
+  .then(() => console.log("✅ Database connected"))
+  .catch((err) => console.error("❌ DB connection failed:", err));
 
 // Routes
 app.use("/api/posts", postRoutes);
 
 app.get("/", (_req, res) => res.send("API running..."));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
