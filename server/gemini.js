@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import fs from "fs/promises";
 import { getAllAlerts } from "./db/alerts.js";
 import { sendWhatsAppMessage } from "./twilio.js";
+import { updateUserState } from "./server.js";
 
 dotenv.config();
 
@@ -41,7 +42,16 @@ export async function triggerAlerts() {
         recentNews,
         alert.source
       );
+      let tickerSymbol = message.split("Ticker:")[1];
+      tickerSymbol = tickerSymbol.split("\n")[0];
+      tickerSymbol = tickerSymbol.trim();
       console.log(message);
+
+      // Store ticker symbol in user state for the default WhatsApp number
+      const whatsAppNumber = process.env.WHATSAPP_NUMBER;
+      const phoneNumberKey = `whatsapp:+1${whatsAppNumber}`;
+      updateUserState(phoneNumberKey, { lastAlertTicker: tickerSymbol });
+      console.log(`Stored ticker ${tickerSymbol} for ${phoneNumberKey}`);
 
       await sendWhatsAppMessage(message);
     }
@@ -76,6 +86,8 @@ async function createTriggerAlertMessage(alert, recentNews, source) {
     "You are an expert financial analyst.\n\
 Read the following news article and explain how it relates to the alert that was triggered.\n\
 Your explanation must be concise, factual, and no longer than 40 words.\n\
+Also include the ticker symbol on a newline (format: [response]\n\
+🏷️ Ticker: [ticker]) \n\
 Do not include extra commentary or formatting.\n\
 \n\
 Alert:\n " +

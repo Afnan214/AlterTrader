@@ -20,6 +20,11 @@ const port = process.env.PORT || 3000;
 
 // Store user conversation states (in production, use Redis or database)
 const userStates = {};
+
+// Export function to update user state from other modules
+export const updateUserState = (phoneNumber, stateUpdate) => {
+  userStates[phoneNumber] = { ...userStates[phoneNumber], ...stateUpdate };
+};
 //CORS configuration
 const origins = ["http://localhost:5173"];
 

@@ -50,7 +50,7 @@ export const buyMessage = async () => {
 };
 
 // Execute buy order
-export const buyStock = async (amount, stockSymbol = "BTC") => {
+export const buyStock = async (amount, stockSymbol = "AMZN") => {
   const [firstUser] = await getAllUsers();
   const id = firstUser.id;
   const userBalance = firstUser.balance;
@@ -70,7 +70,7 @@ export const sellMessage = async () => {
 };
 
 // Execute sell order
-export const sellStock = async (amount, stockSymbol = "BTC") => {
+export const sellStock = async (amount, stockSymbol = "AMZN") => {
   const [firstUser] = await getAllUsers();
   const id = firstUser.id;
   const userBalance = firstUser.balance;
@@ -82,7 +82,7 @@ export const sellStock = async (amount, stockSymbol = "BTC") => {
 };
 
 // Send info about the alert
-export const sendAlertInfo = async (stockSymbol = "BTC") => {
+export const sendAlertInfo = async (stockSymbol = "AMZN") => {
   const message = `📊 *${stockSymbol} Information*
 ━━━━━━━━━━━━━━━
 Current Price: $67,234
@@ -134,14 +134,24 @@ export const handleIncomingMessage = async (
   switch (msg) {
     case "BUY":
       await buyMessage();
-      return { newState: { waitingForBuyAmount: true, stockSymbol: "BTC" } };
+      return {
+        newState: {
+          waitingForBuyAmount: true,
+          stockSymbol: userState.lastAlertTicker || "AMZN",
+        },
+      };
 
     case "SELL":
       await sellMessage();
-      return { newState: { waitingForSellAmount: true, stockSymbol: "BTC" } };
+      return {
+        newState: {
+          waitingForSellAmount: true,
+          stockSymbol: userState.lastAlertTicker || "AMZN",
+        },
+      };
 
     case "INFO":
-      await sendAlertInfo();
+      await sendAlertInfo(userState.lastAlertTicker || "AMZN");
       return { newState: {} };
 
     case "DISMISS":
