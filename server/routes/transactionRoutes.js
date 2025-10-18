@@ -1,37 +1,47 @@
 import express from "express";
 import { pool } from "../postgres.js";
 import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
+import express from "express";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
+import {
+    createTransaction,
+    getTransactionsByUser,
+} from "../db/transactions.js";
 
 const router = express.Router();
 
-// Create transaction
+/**
+ * @route POST /api/transactions
+ * @desc Create a new transaction
+ */
 router.post("/", verifyFirebaseToken, async (req, res) => {
     const { transactionType, amount, ticker } = req.body;
     const userId = req.user.uid;
+
     try {
-        const { rows } = await pool.query(
-            `INSERT INTO transactions (user_id, transactionType, amount, ticker)
-       VALUES ($1, $2, $3, $4) RETURNING *;`,
-            [userId, transactionType, amount, ticker]
+        const newTransaction = await createTransaction(
+            userId,
+            transactionType,
+            amount,
+            ticker
         );
-        res.status(201).json(rows[0]);
+        res.status(201).json(newTransaction);
     } catch (err) {
-        console.error("Error adding transaction:", err);
         res.status(500).json({ error: "Failed to add transaction" });
     }
 });
 
-// Get user's transactions
+/**
+ * @route GET /api/transactions
+ * @desc Get all transactions for logged-in user
+ */
 router.get("/", verifyFirebaseToken, async (req, res) => {
     const userId = req.user.uid;
+
     try {
-        const { rows } = await pool.query(
-            `SELECT * FROM transactions WHERE user_id = $1 ORDER BY transactionDate DESC;`,
-            [userId]
-        );
-        res.json(rows);
+        const transactions = await getTransactionsByUser(userId);
+        res.json(transactions);
     } catch (err) {
-        console.error("Error fetching transactions:", err);
         res.status(500).json({ error: "Failed to fetch transactions" });
     }
 });

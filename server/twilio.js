@@ -1,7 +1,7 @@
 import twilio from "twilio";
 import dotenv from "dotenv";
 import { getAllUsers, getUserById, updateUserBalance } from "./db/users.js";
-
+import { createTransaction } from "./db/transactions.js";
 dotenv.config();
 
 const accountSid = process.env.TWILIO_ACCOUNTSID;
@@ -55,8 +55,8 @@ export const buyStock = async (amount, stockSymbol = "BTC") => {
   const id = firstUser.id;
   const userBalance = firstUser.balance;
   const newBalance = userBalance - amount;
-  updateUserBalance(id, newBalance);
-
+  await updateUserBalance(id, newBalance);
+  await createTransaction(id, "BUY", stockSymbol, amount);
   const message = `✅ *Purchase Confirmed*\n\nBought $${amount} worth of ${stockSymbol}\n\nYour order has been executed!`;
 
   return await sendWhatsAppMessage(message);
@@ -76,6 +76,8 @@ export const sellStock = async (amount, stockSymbol = "BTC") => {
   const userBalance = firstUser.balance;
   const newBalance = userBalance + amount;
   updateUserBalance(id, newBalance);
+  await createTransaction(id, "Sell", stockSymbol, amount);
+
 
   const message = `✅ *Sale Confirmed*\n\nSold $${amount} worth of ${stockSymbol}\n\nYour order has been executed!`;
   return await sendWhatsAppMessage(message);
