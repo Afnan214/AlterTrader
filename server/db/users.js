@@ -1,17 +1,21 @@
 // server/db/users.js
-import { pool } from "./pool.js";
+import { pool } from "../postgres.js";
 
 /**
  * Create a new user
+ * @param {string} id - Firebase UID (Primary Key)
+ * @param {string|null} username - Optional username
+ * @param {string} email - User email
+ * @param {number} balance - Initial balance
  */
-export async function createUser(username, email, balance = 0) {
+export async function createUser(id, username = null, email, balance = 0) {
     const query = `
-    INSERT INTO users (username, email, balance)
-    VALUES ($1, $2, $3)
+    INSERT INTO "Users" (id, username, email, balance, "createdAt", "updatedAt")
+    VALUES ($1, $2, $3, $4, NOW(), NOW())
     RETURNING *;
   `;
-    const values = [username, email, balance];
-
+    const values = [id, username, email, balance];
+    console.log("Creating user with ID:", id);
     try {
         const { rows } = await pool.query(query, values);
         return rows[0];
@@ -21,11 +25,12 @@ export async function createUser(username, email, balance = 0) {
     }
 }
 
+
 /**
  * Get all users
  */
 export async function getAllUsers() {
-    const query = `SELECT * FROM users ORDER BY id ASC;`;
+    const query = `SELECT * FROM "Users" ORDER BY "createdAt" DESC;`;
 
     try {
         const { rows } = await pool.query(query);
@@ -37,10 +42,10 @@ export async function getAllUsers() {
 }
 
 /**
- * Get a single user by ID
+ * Get a single user by ID (Firebase UID)
  */
 export async function getUserById(userId) {
-    const query = `SELECT * FROM users WHERE id = $1;`;
+    const query = `SELECT * FROM "Users" WHERE id = $1;`;
     const values = [userId];
 
     try {
@@ -57,8 +62,8 @@ export async function getUserById(userId) {
  */
 export async function updateUserBalance(userId, newBalance) {
     const query = `
-    UPDATE users
-    SET balance = $1
+    UPDATE "Users"
+    SET balance = $1, "updatedAt" = NOW()
     WHERE id = $2
     RETURNING *;
   `;
@@ -77,7 +82,7 @@ export async function updateUserBalance(userId, newBalance) {
  * Delete a user
  */
 export async function deleteUser(userId) {
-    const query = `DELETE FROM users WHERE id = $1 RETURNING *;`;
+    const query = `DELETE FROM "Users" WHERE id = $1 RETURNING *;`;
     const values = [userId];
 
     try {

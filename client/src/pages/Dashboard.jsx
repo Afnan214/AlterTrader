@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "@headlessui/react";
 import axios from "axios";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
@@ -10,14 +13,6 @@ const Dashboard = () => {
 
   const BASE_URL = "http://localhost:3000/";
 
-  const gemini = async () => {
-    try {
-      const response = await axios.get(BASE_URL);
-      setData(response.data);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    }
-  };
 
   const saveAlert = async () => {
     const response = await fetch(BASE_URL + "addalert", {
@@ -76,18 +71,28 @@ const Dashboard = () => {
     setAlerts(data);
   };
 
-  useEffect(() => {}, []);
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, async (user) => {
+  //     if (user) {
+  //       try {
+  //         const token = await user.getIdToken();
+  //         const res = await fetch("http://localhost:3000/api/protected", {
+  //           headers: { Authorization: `Bearer ${token}` },
+  //         });
+  //         const data = await res.json();
+  //         console.log("✅ Protected route data:", data);
+  //       } catch (err) {
+  //         console.error("Error fetching protected data:", err);
+  //       }
+  //     } else {
+  //       console.warn("⚠️ No user logged in. Skipping protected fetch.");
+  //     }
+  //   });
+
+  //   return () => unsubscribe(); // cleanup
+  // }, []);
   return (
     <div>
-      <div>
-        <Button
-          onClick={() => gemini()}
-          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          Fetch Gemini Data
-        </Button>
-      </div>
-
       <div>
         <input onChange={(e) => setAlertText(e.target.value)} type="text" />
         <Button
@@ -106,12 +111,7 @@ const Dashboard = () => {
           Get Alert by user_id
         </Button>
       </div>
-      {data && (
-        <div className="mt-4 p-4 border rounded">
-          <h2 className="text-lg font-semibold mb-2">Gemini Response:</h2>
-          <p>{data}</p>
-        </div>
-      )}
+
 
       {alerts && alerts.length > 0 && (
         <div className="mt-4 p-4 border rounded">

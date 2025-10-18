@@ -1,15 +1,18 @@
 import express from "express";
-import { createUser, getAllUsers, getUserById, updateUserBalance, deleteUser } from "./db/users.js";
-
+import { createUser, getAllUsers, getUserById, updateUserBalance, deleteUser } from "../db/users.js";
+import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 const router = express.Router();
 
 // POST /api/users
-router.post("/", async (req, res) => {
+router.post("/", verifyFirebaseToken, async (req, res) => {
+    const { id, username, email, balance } = req.body;
+    console.log("📩 Received data:", { id, username, email, balance });
+
     try {
-        const { username, email, balance } = req.body;
-        const newUser = await createUser(username, email, balance);
+        const newUser = await createUser(id, username, email, balance || 0);
         res.status(201).json(newUser);
     } catch (err) {
+        console.error("Error creating user:", err);
         res.status(500).json({ error: "Failed to create user" });
     }
 });

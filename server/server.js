@@ -3,6 +3,8 @@ import cors from "cors";
 import { gemini } from "./gemini.js";
 import dotenv from "dotenv";
 import { addAlert, getAlertsFromUser } from "./postgres.js";
+import userRoutes from "./routes/userRoutes.js";
+import protectedRoutes from "./routes/protected.js";
 
 dotenv.config();
 
@@ -20,7 +22,8 @@ app.get("/", async (req, res) => {
   gemini_response = await gemini();
   res.send(gemini_response);
 });
-
+app.use("/api", protectedRoutes);
+app.use("/api/users", userRoutes);
 app.post("/getalerts", async (req, res) => {
   console.log("in /getalerts");
 

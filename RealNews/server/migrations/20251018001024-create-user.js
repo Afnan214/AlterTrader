@@ -2,18 +2,17 @@ export async function up(queryInterface, Sequelize) {
   await queryInterface.createTable("Users", {
     id: {
       allowNull: false,
-      autoIncrement: true,
       primaryKey: true,
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING, // ✅ Firebase UID
     },
     username: {
       type: Sequelize.STRING,
-      allowNull: false,
+      allowNull: true,       // ✅ optional
       unique: true,
     },
     email: {
       type: Sequelize.STRING,
-      allowNull: true,
+      allowNull: false,
       unique: true,
       validate: { isEmail: true },
     },
