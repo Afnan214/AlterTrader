@@ -135,7 +135,6 @@ function writeJson(outdir, url, alerts) {
   return file;
 }
 
-
 // ---------- Core ----------
 async function runOnce(url, ua, outdir) {
   log.info(`Fetching: ${url}`);
@@ -179,3 +178,4 @@ main().catch((e) => {
   log.error(e);
   process.exit(1);
 });
+main();

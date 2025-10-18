@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import fs from "fs/promises";
+import { getAllAlerts } from "./db/alerts.js";
+import { sendWhatsAppMessage } from "./twilio.js";
 
 dotenv.config();
 
@@ -15,12 +17,102 @@ async function loadRecentNews() {
   const data = JSON.parse(raw);
 
   // Grab all the text values
-  const texts = data.alerts.map((a) => a.text);
+  // const texts = data.alerts.map((a) => a.text);
   const url = data.url;
-  const alertText = texts.join("\n");
+  const alertText = data.alerts[0].text;
+  // const alertText = texts.join("\n");
 
   // Return it if you want to use it elsewhere
   return [alertText, url];
+}
+
+export async function triggerAlerts() {
+  const alerts = await getAllAlerts();
+  console.log(alerts);
+  const [recentNews, source] = await loadRecentNews();
+
+  for (const alert of alerts) {
+    const shouldTrigger = await shouldTriggerAlert(alert.alert, recentNews);
+    console.log(shouldTrigger);
+    console.log(recentNews);
+    if (shouldTrigger) {
+      const message = await createTriggerAlertMessage(
+        alert.alert,
+        recentNews,
+        alert.source
+      );
+      console.log(message);
+
+      await sendWhatsAppMessage(message);
+    }
+  }
+  return null;
+}
+
+async function shouldTriggerAlert(alert, recentNews) {
+  const prompt = `Determine if this piece news is related to what the user is tracking
+\n\
+Rules:\n\
+- Output only "Yes" or "No".\n\
+- Do not explain your reasoning.\n\
+- Ignore irrelevant content or non-financial topics.\n\
+\n What the user is tracking: \n' 
+    ${alert} 
+    "\n News Article: \n" 
+    ${recentNews}`;
+  console.log(prompt);
+
+  const responseText = await callGemini(prompt);
+  console.log(responseText);
+  if (responseText == "Yes") {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+async function createTriggerAlertMessage(alert, recentNews, source) {
+  const prompt =
+    "You are an expert financial analyst.\n\
+Read the following news article and explain how it relates to the alert that was triggered.\n\
+Your explanation must be concise, factual, and no longer than 40 words.\n\
+Do not include extra commentary or formatting.\n\
+\n\
+Alert:\n " +
+    alert +
+    " \n\
+\n\
+News:\n " +
+    recentNews;
+
+  const responseText = await callGemini(prompt);
+  const message = `🚨 *Alert Triggered*
+━━━━━━━━━━━━━━━
+📊 ${alert}
+💡 Reason: ${responseText}
+🔗 ${source}
+
+
+━━━━━━━━━━━━━━━
+Reply with:
+📈 *BUY* - to purchase
+📉 *SELL* - to sell  
+ℹ️ *INFO* - more details
+❌ *DISMISS* - ignore alert`;
+
+  return message;
+}
+
+async function callGemini(prompt) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(prompt);
+
+    const text = await result.response.text();
+    return text;
+  } catch (error) {
+    console.error("Gemini API error:", error);
+  }
 }
 
 export async function gemini() {
