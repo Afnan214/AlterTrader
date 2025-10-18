@@ -11,7 +11,7 @@ const POSTGRESQL_PORT = process.env.POSTGRESQL_PORT;
 
 const { Pool } = pg;
 
-const pool = new Pool({
+export const pool = new Pool({
   user: POSTGRESQL_USER,
   host: POSTGRESQL_HOST,
   database: POSTGRESQL_DB,
@@ -55,6 +55,7 @@ export async function addAlert(alert) {
 
   console.log(res);
 }
+
 
 // getData();
 // addAlert("test123");
