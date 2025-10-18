@@ -2,7 +2,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import fs from "fs/promises";
 
-// load environment variables from .env (if present)
 dotenv.config();
 
 // create the client with your API key directly (no object wrapper)
@@ -88,7 +87,7 @@ Reply with:
 ℹ️ *INFO* - more details
 ❌ *DISMISS* - ignore alert`;
 
-      console.log(message)
+      console.log(message);
     }
 
     // optionally handle the answer
@@ -100,5 +99,3 @@ Reply with:
     console.error("Gemini API error:", error);
   }
 }
-
-// gemini();
