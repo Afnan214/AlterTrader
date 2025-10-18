@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import fs from "fs/promises";
 import { getAllAlerts } from "./db/alerts.js";
+import { sendWhatsAppMessage } from "./twilio.js";
 
 dotenv.config();
 
@@ -25,9 +26,7 @@ async function loadRecentNews() {
   return [alertText, url];
 }
 
-async function findTriggeredAlerts() {
-  // function that will read all table rows and compare against recent news if it exsits
-  // need a new table to check if recent news is unique
+export async function triggerAlerts() {
   const alerts = await getAllAlerts();
   console.log(alerts);
   const [recentNews, source] = await loadRecentNews();
@@ -43,12 +42,12 @@ async function findTriggeredAlerts() {
         alert.source
       );
       console.log(message);
+
+      await sendWhatsAppMessage(message);
     }
   }
   return null;
 }
-
-findTriggeredAlerts();
 
 async function shouldTriggerAlert(alert, recentNews) {
   const prompt = `Determine if this piece news is related to what the user is tracking
@@ -59,10 +58,12 @@ Rules:\n\
 - Ignore irrelevant content or non-financial topics.\n\
 \n What the user is tracking: \n' 
     ${alert} 
-    "\n News Article: \n" +
+    "\n News Article: \n" 
     ${recentNews}`;
   console.log(prompt);
-  const responseText = callGemini(prompt);
+
+  const responseText = await callGemini(prompt);
+  console.log(responseText);
   if (responseText == "Yes") {
     return true;
   } else {
@@ -84,7 +85,7 @@ Alert:\n " +
 News:\n " +
     recentNews;
 
-  const responseText = callGemini(prompt);
+  const responseText = await callGemini(prompt);
   const message = `🚨 *Alert Triggered*
 ━━━━━━━━━━━━━━━
 📊 ${alert}
