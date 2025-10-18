@@ -42,19 +42,33 @@ export async function getUUIDByID(id) {
 
 const alertsTableName = "alerts";
 
-export async function getData() {
-  const res = await pool.query(`SELECT * FROM ${alertsTableName}`);
-  console.log(res.rows);
+export async function getAlertsFromUser(user) {
+  try {
+    const res = await pool.query(
+      `SELECT * FROM ${alertsTableName} WHERE user_id = $1`,
+      [user]
+    );
+    console.log(res.rows);
+    return res;
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    throw error;
+  }
 }
 
 export async function addAlert(alert) {
-  const res = await pool.query(
-    `INSERT INTO ${alertsTableName} (alert, user_id) VALUES ($1, $2)`,
-    [alert, 1]
-  );
-
-  console.log(res);
+  try {
+    const res = await pool.query(
+      `INSERT INTO ${alertsTableName} (alert, user_id) VALUES ($1, $2)`,
+      [alert, 1]
+    );
+    console.log(res);
+    return res;
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    throw error;
+  }
 }
 
-// getData();
+// getAlertsFromUser(1);
 // addAlert("test123");
