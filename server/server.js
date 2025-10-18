@@ -8,6 +8,7 @@ import protectedRoutes from "./routes/protected.js";
 import alertRoutes from "./routes/alertRoutes.js";
 // import { handleIncomingMessage, sendWhatsAppAlert } from "./twilio.js";
 import { handleIncomingMessage } from "./twilio.js";
+import transactionRoutes from "./routes/transactionRoutes.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.get("/", async (req, res) => {
 app.use("/api", protectedRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/alerts", alertRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 // 🚨 WEBHOOK: Twilio calls this when user sends a WhatsApp message
 app.post("/webhook/whatsapp", async (req, res) => {

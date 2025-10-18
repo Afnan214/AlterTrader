@@ -1,182 +1,99 @@
 import { useEffect, useState } from "react";
-import { Button } from "@headlessui/react";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import AlertsPanel from "../components/AlertsPanel";
+import BalanceCard from "../components/BalanceCard";
+import TransactionsPanel from "../components/TransactionsPanel";
 
 const Dashboard = () => {
-  const [alertText, setAlertText] = useState("");
-  const [alerts, setAlerts] = useState([]);
   const [user, setUser] = useState(null);
-  const [userBalance, setUserBalance] = useState(0)
+  const [alerts, setAlerts] = useState([]);
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState([]);
   const BASE_URL = "http://localhost:3000/api";
 
-  // ✅ Track current Firebase user
+  // Track logged-in user
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         console.log("✅ Logged in as:", firebaseUser.email);
         setUser(firebaseUser);
-        fetchAlerts(firebaseUser); // automatically load alerts when logged in
+        await Promise.all([
+          fetchBalance(firebaseUser),
+          fetchAlerts(firebaseUser),
+          fetchTransactions(firebaseUser),
+        ]);
       } else {
-        console.warn("⚠️ No user logged in");
         setUser(null);
         setAlerts([]);
+        setTransactions([]);
+        setBalance(0);
       }
     });
     return () => unsubscribe();
   }, []);
 
-  // ✅ Create a new alert for the logged-in user
-  const saveAlert = async () => {
-    if (!user) {
-      alert("You must be logged in to save alerts.");
-      return;
-    }
-    if (!alertText.trim()) {
-      alert("Please enter an alert message.");
-      return;
-    }
-
-    try {
-      const token = await user.getIdToken();
-      const response = await fetch(`${BASE_URL}/alerts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ alert: alertText }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error creating alert:", errorData.error);
-        alert(`Error: ${errorData.error}`);
-        return;
-      }
-
-      const newAlert = await response.json();
-      console.log("✅ Created alert:", newAlert);
-
-      setAlerts((prev) => [newAlert, ...prev]);
-      setAlertText(""); // reset field
-    } catch (err) {
-      console.error("Error saving alert:", err);
-      alert("Failed to save alert. Try again.");
-    }
-  };
-
-  // ✅ Fetch all alerts for logged-in user
-  const fetchAlerts = async (firebaseUser = user) => {
-    if (!firebaseUser) return;
-    console.log(firebaseUser.uid)
-    try {
-      const token = await firebaseUser.getIdToken();
-      const response = await fetch(`${BASE_URL}/alerts`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        console.error("Error fetching alerts:", await response.text());
-        return;
-      }
-
-      const data = await response.json();
-      console.log("✅ Fetched alerts:", data);
-      setAlerts(data);
-    } catch (err) {
-      console.error("Error fetching alerts:", err);
-    }
-  };
-  // ✅ Fetch all alerts for logged-in user
   const fetchBalance = async (firebaseUser = user) => {
     if (!firebaseUser) return;
-
     try {
       const token = await firebaseUser.getIdToken();
       const response = await fetch(`${BASE_URL}/users/${firebaseUser.uid}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!response.ok) {
-        console.error("Error fetching UserInfo:", await response.text());
-        return;
-      }
-
       const data = await response.json();
-      console.log("✅ Fetched user info:", data);
-      setAlerts(data);
+      setBalance(data.balance || 0);
+    } catch (err) {
+      console.error("Error fetching balance:", err);
+    }
+  };
+
+  const fetchAlerts = async (firebaseUser = user) => {
+    if (!firebaseUser) return;
+    try {
+      const token = await firebaseUser.getIdToken();
+      const response = await fetch(`${BASE_URL}/alerts`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setAlerts(data || []);
     } catch (err) {
       console.error("Error fetching alerts:", err);
     }
   };
 
-  // ✅ Refresh alerts when user changes
-  useEffect(() => {
-    if (user) {
-      fetchAlerts();
-      fetchBalance()
+  const fetchTransactions = async (firebaseUser = user) => {
+    if (!firebaseUser) return;
+    try {
+      const token = await firebaseUser.getIdToken();
+      const response = await fetch(`${BASE_URL}/transactions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setTransactions(data || []);
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
     }
-  }, [user]);
+  };
 
   return (
-    <div className="flex ">
-      <div className="max-w-xl mx-auto mt-10 p-6 rounded shadow">
-        <h1 className="text-2xl font-semibold mb-4 text-center">Your Alerts</h1>
+    <div className="min-h-screen  p-6">
+      <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
+        Trading Dashboard
+      </h1>
 
-        <div className="flex items-center gap-2 mb-6">
-          <input
-            value={alertText}
-            onChange={(e) => setAlertText(e.target.value)}
-            placeholder="Enter a new alert..."
-            className="flex-grow border p-2 rounded"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <AlertsPanel
+            alerts={alerts}
+            user={user}
+            refreshAlerts={() => fetchAlerts(user)}
           />
-          <Button
-            onClick={saveAlert}
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-          >
-            Save
-          </Button>
+
         </div>
-
-        {alerts.length > 0 ? (
-          <div className="p-4 border rounded">
-            <h2 className="text-lg font-semibold mb-2">Your Alerts</h2>
-            <ul className="list-disc list-inside space-y-1">
-              {alerts.map((alert, index) => (
-                <li key={alert.id || index} className="text-gray-800">
-                  {alert.alert}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center">No alerts yet. Create one above!</p>
-        )}
-      </div>
-      <div className="max-w-xl mx-auto mt-10 p-6 rounded shadow">
-        <h1 className="text-2xl font-semibold mb-4 text-center">Current Balance</h1>
-
-        <div className="flex items-center gap-2 mb-6">
-          <p>
-
-          </p>
+        <div className="flex flex-col gap-6 ">
+          <BalanceCard balance={balance} />
+          <TransactionsPanel transactions={transactions} />
         </div>
-
-        {alerts.length > 0 ? (
-          <div className="p-4 border rounded">
-            <h2 className="text-lg font-semibold mb-2">Your Alerts</h2>
-            <ul className="list-disc list-inside space-y-1">
-              {alerts.map((alert, index) => (
-                <li key={alert.id || index} className="text-gray-800">
-                  {alert.alert}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center">No alerts yet. Create one above!</p>
-        )}
       </div>
     </div>
   );
