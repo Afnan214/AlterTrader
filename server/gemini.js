@@ -27,10 +27,10 @@ async function loadRecentNews() {
   return [alertText, url];
 }
 
-export async function triggerAlerts() {
+export async function triggerAlerts(recentNews, source) {
   const alerts = await getAllAlerts();
   console.log(alerts);
-  const [recentNews, source] = await loadRecentNews();
+  // const [recentNews, source] = await loadRecentNews();
 
   for (const alert of alerts) {
     const shouldTrigger = await shouldTriggerAlert(alert.alert, recentNews);
@@ -40,7 +40,7 @@ export async function triggerAlerts() {
       const message = await createTriggerAlertMessage(
         alert.alert,
         recentNews,
-        alert.source
+        source
       );
       let tickerSymbol = message.split("Ticker:")[1];
       tickerSymbol = tickerSymbol.split("\n")[0];

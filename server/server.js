@@ -9,7 +9,7 @@ import alertRoutes from "./routes/alertRoutes.js";
 // import { handleIncomingMessage, sendWhatsAppAlert } from "./twilio.js";
 import { handleIncomingMessage } from "./twilio.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
-
+import "./webScraper.js"
 dotenv.config();
 
 //create express app

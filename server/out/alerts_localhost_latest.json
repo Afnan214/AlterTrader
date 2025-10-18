@@ -1,0 +1,13 @@
+{
+  "scrapedAt": "2025-10-18T20:48:10.690Z",
+  "url": "http://localhost:5174/",
+  "count": 1,
+  "alerts": [
+    {
+      "tag": "p",
+      "classList": "alert text-gray-700",
+      "text": "HACK",
+      "links": []
+    }
+  ]
+}
