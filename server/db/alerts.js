@@ -18,6 +18,16 @@ export async function getAlertsFromUser(userId) {
   }
 }
 
+export async function getAllAlerts() {
+  try {
+    const res = await pool.query(`SELECT * FROM ${alertsTableName}`);
+    return res.rows;
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    throw error;
+  }
+}
+
 /**
  * Add a new alert for a user
  */
