@@ -1,133 +1,98 @@
 import { useEffect, useState } from "react";
-import { Button } from "@headlessui/react";
-import axios from "axios";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import AlertsPanel from "../components/AlertsPanel";
+import BalanceCard from "../components/BalanceCard";
+import TransactionsPanel from "../components/TransactionsPanel";
 
 const Dashboard = () => {
-  const [data, setData] = useState(null);
-  const [alertText, setAlertText] = useState("");
-  const [alertsUserID, setAlertsUserID] = useState("");
+  const [user, setUser] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState([]);
+  const BASE_URL = "http://localhost:3000/api";
 
-  const BASE_URL = "http://localhost:3000/";
+  // Track logged-in user
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        console.log("✅ Logged in as:", firebaseUser.email);
+        setUser(firebaseUser);
+        await Promise.all([
+          fetchBalance(firebaseUser),
+          fetchAlerts(firebaseUser),
+          fetchTransactions(firebaseUser),
+        ]);
+      } else {
+        setUser(null);
+        setAlerts([]);
+        setTransactions([]);
+        setBalance(0);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
-  const gemini = async () => {
+  const fetchBalance = async (firebaseUser = user) => {
+    if (!firebaseUser) return;
     try {
-      const response = await axios.get(BASE_URL);
-      setData(response.data);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      const token = await firebaseUser.getIdToken();
+      const response = await fetch(`${BASE_URL}/users/${firebaseUser.uid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setBalance(data.balance || 0);
+    } catch (err) {
+      console.error("Error fetching balance:", err);
     }
   };
 
-  const saveAlert = async () => {
-    const response = await fetch(BASE_URL + "addalert", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({ alert: alertText }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error fetching data: ", errorData.message);
-      alert(`Error: ${errorData.message}`);
-      return;
+  const fetchAlerts = async (firebaseUser = user) => {
+    if (!firebaseUser) return;
+    try {
+      const token = await firebaseUser.getIdToken();
+      const response = await fetch(`${BASE_URL}/alerts`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setAlerts(data || []);
+    } catch (err) {
+      console.error("Error fetching alerts:", err);
     }
-
-    // const data = await response.json();
-    // console.log(`Data: ${data.uid}`);
   };
 
-  const getAlerts = async () => {
-    if (!alertsUserID || alertsUserID.trim() === "") {
-      alert("Please enter a user ID");
-      return;
+  const fetchTransactions = async (firebaseUser = user) => {
+    if (!firebaseUser) return;
+    try {
+      const token = await firebaseUser.getIdToken();
+      const response = await fetch(`${BASE_URL}/transactions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setTransactions(data || []);
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
     }
-
-    let user_id = parseInt(alertsUserID, 10);
-
-    if (isNaN(user_id)) {
-      alert("Please enter a valid number");
-      return;
-    }
-
-    console.log("Sending user_id:", user_id);
-
-    const response = await fetch(BASE_URL + "getalerts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify({ user_id }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error fetching data: ", errorData.message);
-      alert(`Error: ${errorData.message}`);
-      return;
-    }
-
-    const data = await response.json();
-    console.log("Received data:", data);
-    setAlerts(data);
   };
 
-  useEffect(() => {}, []);
   return (
-    <div>
-      <div>
-        <Button
-          onClick={() => gemini()}
-          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          Fetch Gemini Data
-        </Button>
-      </div>
-
-      <div>
-        <input onChange={(e) => setAlertText(e.target.value)} type="text" />
-        <Button
-          onClick={() => saveAlert()}
-          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          Save Alert
-        </Button>
-      </div>
-      <div>
-        <input onChange={(e) => setAlertsUserID(e.target.value)} type="text" />
-        <Button
-          onClick={() => getAlerts()}
-          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          Get Alert by user_id
-        </Button>
-      </div>
-      {data && (
-        <div className="mt-4 p-4 border rounded">
-          <h2 className="text-lg font-semibold mb-2">Gemini Response:</h2>
-          <p>{data}</p>
+    <div className="min-h-[calc(100vh-4rem)] p-6 bg-gradient-to-b from-gray-900 to-gray-950 text-gray-100">
+      <div className="max-w-[1200px] mx-auto flex flex-col lg:flex-row gap-6 justify-center items-start">
+        {/* LEFT COLUMN */}
+        <div className="flex flex-col gap-6 w-full lg:w-[60%]">
+          <AlertsPanel
+            alerts={alerts}
+            user={user}
+            refreshAlerts={() => fetchAlerts(user)}
+          />
         </div>
-      )}
 
-      {alerts && alerts.length > 0 && (
-        <div className="mt-4 p-4 border rounded">
-          <h2 className="text-lg font-semibold mb-2">Alerts:</h2>
-          <ul className="list-disc list-inside">
-            {alerts.map((alert, index) => (
-              <li key={alert.id || index} className="mb-2">
-                <span className="font-medium">Alert:</span> {alert.alert}
-                <span className="text-sm text-gray-600 ml-2">
-                  (User ID: {alert.user_id})
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* RIGHT COLUMN */}
+        <div className="flex flex-col gap-6 w-full lg:w-[35%]">
+          <BalanceCard balance={balance} />
+          <TransactionsPanel transactions={transactions} />
         </div>
-      )}
+      </div>
     </div>
   );
 };
