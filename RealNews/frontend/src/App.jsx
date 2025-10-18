@@ -5,6 +5,9 @@ import PostCard from "./components/PostCard";
 
 export default function App() {
   const [posts, setPosts] = useState([]);
+  const [message, setMessage] = useState(
+    "No posts yet. Get one or create one above!"
+  );
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -14,7 +17,7 @@ export default function App() {
           posts.map((post, i) => <PostCard key={i} post={post} />)
         ) : (
           <p className="text-center text-gray-500 mt-8">
-            No posts yet. Create one above!
+            {message}
           </p>
         )}
       </main>
