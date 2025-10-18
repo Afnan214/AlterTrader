@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { io } from "socket.io-client";
 import AlertsPanel from "../components/AlertsPanel";
 import BalanceCard from "../components/BalanceCard";
 import TransactionsPanel from "../components/TransactionsPanel";
@@ -11,8 +12,9 @@ const Dashboard = () => {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const BASE_URL = "http://localhost:3000/api";
+  const socketRef = useRef(null);
 
-  // Track logged-in user
+  // Track logged-in user and setup WebSocket
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -23,14 +25,53 @@ const Dashboard = () => {
           fetchAlerts(firebaseUser),
           fetchTransactions(firebaseUser),
         ]);
+
+        // Setup WebSocket connection
+        const token = await firebaseUser.getIdToken();
+        socketRef.current = io("http://localhost:3000", {
+          auth: { token },
+        });
+
+        socketRef.current.on("connect", () => {
+          console.log("🔌 WebSocket connected:", socketRef.current.id);
+        });
+
+        socketRef.current.on("newTransaction", (transaction) => {
+          console.log("📥 Received new transaction:", transaction);
+          // Add the new transaction to the beginning of the list
+          setTransactions((prev) => [transaction, ...prev]);
+        });
+
+        socketRef.current.on("balanceUpdate", (newBalance) => {
+          console.log("📥 Received balance update:", newBalance);
+          // Update the balance
+          setBalance(newBalance);
+        });
+
+        socketRef.current.on("disconnect", () => {
+          console.log("👋 WebSocket disconnected");
+        });
       } else {
         setUser(null);
         setAlerts([]);
         setTransactions([]);
         setBalance(0);
+
+        // Disconnect socket if user logs out
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+          socketRef.current = null;
+        }
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribe();
+      // Clean up socket connection when component unmounts
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
   }, []);
 
   const fetchBalance = async (firebaseUser = user) => {

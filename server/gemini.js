@@ -27,6 +27,8 @@ async function loadRecentNews() {
   return [alertText, url];
 }
 
+// triggerAlerts();
+
 export async function triggerAlerts(recentNews, source) {
   const alerts = await getAllAlerts();
   console.log(alerts);
@@ -34,8 +36,11 @@ export async function triggerAlerts(recentNews, source) {
 
   for (const alert of alerts) {
     const shouldTrigger = await shouldTriggerAlert(alert.alert, recentNews);
+    console.log("--------------------------------");
     console.log(shouldTrigger);
     console.log(recentNews);
+    console.log(alert.alert);
+    console.log("--------------------------------");
     if (shouldTrigger) {
       const message = await createTriggerAlertMessage(
         alert.alert,
