@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
-import { addAlert, getAlertsFromUser } from "../db/alerts.js";
+import { addAlert, getAlertsFromUser, editAlert, deleteAlert } from "../db/alerts.js";
 
 const router = express.Router();
 
@@ -38,5 +38,43 @@ router.get("/", verifyFirebaseToken, async (req, res) => {
         res.status(500).json({ error: "Failed to fetch alerts" });
     }
 });
+
+
+/**
+ * PUT /api/alerts/:id
+ * Edit an alert
+ */
+router.put("/:id", verifyFirebaseToken, async (req, res) => {
+    const { id } = req.params;
+    const { alert } = req.body;
+    if (!alert) return res.status(400).json({ error: "Alert text is required" });
+
+    try {
+        const updated = await editAlert(id, alert, req.user.uid);
+        if (!updated) return res.status(404).json({ error: "Alert not found" });
+        res.json(updated);
+    } catch (err) {
+        console.error("Error updating alert:", err);
+        res.status(500).json({ error: "Failed to update alert" });
+    }
+});
+
+/**
+ * DELETE /api/alerts/:id
+ * Delete an alert
+ */
+router.delete("/:id", verifyFirebaseToken, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deleted = await deleteAlert(id, req.user.uid);
+        if (!deleted) return res.status(404).json({ error: "Alert not found" });
+        res.json({ message: "Alert deleted", deleted });
+    } catch (err) {
+        console.error("Error deleting alert:", err);
+        res.status(500).json({ error: "Failed to delete alert" });
+    }
+});
+
 
 export default router;
