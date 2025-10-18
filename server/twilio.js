@@ -50,13 +50,30 @@ export const buyMessage = async () => {
 };
 
 // Execute buy order
-export const buyStock = async (amount, stockSymbol = "AMZN") => {
+export const buyStock = async (amount, stockSymbol = "AMZN", io = null) => {
   const [firstUser] = await getAllUsers();
   const id = firstUser.id;
   const userBalance = firstUser.balance;
   const newBalance = userBalance - amount;
   await updateUserBalance(id, newBalance);
-  await createTransaction(id, "BUY", stockSymbol, amount);
+  const newTransaction = await createTransaction(
+    id,
+    "BUY",
+    amount,
+    stockSymbol
+  );
+
+  // Emit WebSocket events if io is available
+  if (io) {
+    io.to(id).emit("newTransaction", newTransaction);
+    io.to(id).emit("balanceUpdate", newBalance);
+    console.log(
+      `📤 Emitted newTransaction and balance to user ${id} (via WhatsApp):`,
+      newTransaction,
+      `New balance: ${newBalance}`
+    );
+  }
+
   const message = `✅ *Purchase Confirmed*\n\nBought $${amount} worth of ${stockSymbol}\n\nYour order has been executed!`;
 
   return await sendWhatsAppMessage(message);
@@ -70,14 +87,29 @@ export const sellMessage = async () => {
 };
 
 // Execute sell order
-export const sellStock = async (amount, stockSymbol = "AMZN") => {
+export const sellStock = async (amount, stockSymbol = "AMZN", io = null) => {
   const [firstUser] = await getAllUsers();
   const id = firstUser.id;
   const userBalance = firstUser.balance;
   const newBalance = userBalance + amount;
-  updateUserBalance(id, newBalance);
-  await createTransaction(id, "Sell", stockSymbol, amount);
+  await updateUserBalance(id, newBalance);
+  const newTransaction = await createTransaction(
+    id,
+    "SELL",
+    amount,
+    stockSymbol
+  );
 
+  // Emit WebSocket events if io is available
+  if (io) {
+    io.to(id).emit("newTransaction", newTransaction);
+    io.to(id).emit("balanceUpdate", newBalance);
+    console.log(
+      `📤 Emitted newTransaction and balance to user ${id} (via WhatsApp):`,
+      newTransaction,
+      `New balance: ${newBalance}`
+    );
+  }
 
   const message = `✅ *Sale Confirmed*\n\nSold $${amount} worth of ${stockSymbol}\n\nYour order has been executed!`;
   return await sendWhatsAppMessage(message);
@@ -101,7 +133,8 @@ Reply *BUY* or *SELL* to trade`;
 export const handleIncomingMessage = async (
   incomingMsg,
   from,
-  userState = {}
+  userState = {},
+  io = null
 ) => {
   const msg = incomingMsg.trim().toUpperCase();
 
@@ -109,7 +142,7 @@ export const handleIncomingMessage = async (
   if (userState.waitingForBuyAmount) {
     const amount = parseFloat(incomingMsg);
     if (!isNaN(amount) && amount > 0) {
-      await buyStock(amount, userState.stockSymbol);
+      await buyStock(amount, userState.stockSymbol, io);
       return { newState: {} }; // Clear state
     } else {
       await sendWhatsAppMessage(
@@ -122,7 +155,7 @@ export const handleIncomingMessage = async (
   if (userState.waitingForSellAmount) {
     const amount = parseFloat(incomingMsg);
     if (!isNaN(amount) && amount > 0) {
-      await sellStock(amount, userState.stockSymbol);
+      await sellStock(amount, userState.stockSymbol, io);
       return { newState: {} }; // Clear state
     } else {
       await sendWhatsAppMessage(

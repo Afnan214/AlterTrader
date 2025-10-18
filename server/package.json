@@ -18,6 +18,7 @@
     "express": "^5.1.0",
     "firebase-admin": "^13.5.0",
     "pg": "^8.16.3",
+    "socket.io": "^4.8.1",
     "twilio": "^5.10.3"
   },
   "devDependencies": {
