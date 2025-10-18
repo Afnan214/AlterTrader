@@ -67,6 +67,10 @@ app.post("/webhook/whatsapp", async (req, res) => {
   }
 });
 
+app.get("/webhook/whatsapp", async (req, res) => {
+  res.send("hi");
+});
+
 // // Test endpoint to send an alert (for testing)
 // app.post("/test/sendalert", async (req, res) => {
 //   try {

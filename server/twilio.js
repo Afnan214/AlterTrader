@@ -1,5 +1,6 @@
 import twilio from "twilio";
 import dotenv from "dotenv";
+import { getAllUsers, getUserById, updateUserBalance } from "./db/users.js";
 
 dotenv.config();
 
@@ -34,7 +35,7 @@ export const sendWhatsAppMessage = async (
 // ━━━━━━━━━━━━━━━
 // Reply with:
 // 📈 *BUY* - to purchase
-// 📉 *SELL* - to sell  
+// 📉 *SELL* - to sell
 // ℹ️ *INFO* - more details
 // ❌ *DISMISS* - ignore alert`;
 
@@ -50,8 +51,14 @@ export const buyMessage = async () => {
 
 // Execute buy order
 export const buyStock = async (amount, stockSymbol = "BTC") => {
-  // Simulate buying - you'll update database later
+  const [firstUser] = await getAllUsers();
+  const id = firstUser.id;
+  const userBalance = firstUser.balance;
+  const newBalance = userBalance - amount;
+  updateUserBalance(id, newBalance);
+
   const message = `✅ *Purchase Confirmed*\n\nBought $${amount} worth of ${stockSymbol}\n\nYour order has been executed!`;
+
   return await sendWhatsAppMessage(message);
 };
 
@@ -64,7 +71,12 @@ export const sellMessage = async () => {
 
 // Execute sell order
 export const sellStock = async (amount, stockSymbol = "BTC") => {
-  // Simulate selling - you'll update database later
+  const [firstUser] = await getAllUsers();
+  const id = firstUser.id;
+  const userBalance = firstUser.balance;
+  const newBalance = userBalance + amount;
+  updateUserBalance(id, newBalance);
+
   const message = `✅ *Sale Confirmed*\n\nSold $${amount} worth of ${stockSymbol}\n\nYour order has been executed!`;
   return await sendWhatsAppMessage(message);
 };
