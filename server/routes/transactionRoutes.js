@@ -1,7 +1,5 @@
 import express from "express";
-import { pool } from "../postgres.js";
-import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
-import express from "express";
+import { pool } from "../db/postgresSetup.js";
 import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js";
 import {
     createTransaction,

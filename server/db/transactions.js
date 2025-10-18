@@ -1,4 +1,4 @@
-import { pool } from "../postgres.js";
+import { pool } from "./postgresSetup.js"
 
 /**
  * Create a new transaction for a user
