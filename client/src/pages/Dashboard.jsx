@@ -7,7 +7,8 @@ const Dashboard = () => {
   const [alertText, setAlertText] = useState("");
   const [alerts, setAlerts] = useState([]);
   const [user, setUser] = useState(null);
-  const BASE_URL = "http://localhost:3000/api/alerts";
+  const [userBalance, setUserBalance] = useState(0)
+  const BASE_URL = "http://localhost:3000/api";
 
   // ✅ Track current Firebase user
   useEffect(() => {
@@ -38,7 +39,7 @@ const Dashboard = () => {
 
     try {
       const token = await user.getIdToken();
-      const response = await fetch(BASE_URL, {
+      const response = await fetch(`${BASE_URL}/alerts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,10 +69,10 @@ const Dashboard = () => {
   // ✅ Fetch all alerts for logged-in user
   const fetchAlerts = async (firebaseUser = user) => {
     if (!firebaseUser) return;
-
+    console.log(firebaseUser.uid)
     try {
       const token = await firebaseUser.getIdToken();
-      const response = await fetch(BASE_URL, {
+      const response = await fetch(`${BASE_URL}/alerts`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -87,45 +88,96 @@ const Dashboard = () => {
       console.error("Error fetching alerts:", err);
     }
   };
+  // ✅ Fetch all alerts for logged-in user
+  const fetchBalance = async (firebaseUser = user) => {
+    if (!firebaseUser) return;
+
+    try {
+      const token = await firebaseUser.getIdToken();
+      const response = await fetch(`${BASE_URL}/users/${firebaseUser.uid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        console.error("Error fetching UserInfo:", await response.text());
+        return;
+      }
+
+      const data = await response.json();
+      console.log("✅ Fetched user info:", data);
+      setAlerts(data);
+    } catch (err) {
+      console.error("Error fetching alerts:", err);
+    }
+  };
 
   // ✅ Refresh alerts when user changes
   useEffect(() => {
-    if (user) fetchAlerts();
+    if (user) {
+      fetchAlerts();
+      fetchBalance()
+    }
   }, [user]);
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 rounded shadow">
-      <h1 className="text-2xl font-semibold mb-4 text-center">Your Alerts</h1>
+    <div className="flex ">
+      <div className="max-w-xl mx-auto mt-10 p-6 rounded shadow">
+        <h1 className="text-2xl font-semibold mb-4 text-center">Your Alerts</h1>
 
-      <div className="flex items-center gap-2 mb-6">
-        <input
-          value={alertText}
-          onChange={(e) => setAlertText(e.target.value)}
-          placeholder="Enter a new alert..."
-          className="flex-grow border p-2 rounded"
-        />
-        <Button
-          onClick={saveAlert}
-          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-        >
-          Save
-        </Button>
-      </div>
-
-      {alerts.length > 0 ? (
-        <div className="p-4 border rounded">
-          <h2 className="text-lg font-semibold mb-2">Your Alerts</h2>
-          <ul className="list-disc list-inside space-y-1">
-            {alerts.map((alert, index) => (
-              <li key={alert.id || index} className="text-gray-800">
-                {alert.alert}
-              </li>
-            ))}
-          </ul>
+        <div className="flex items-center gap-2 mb-6">
+          <input
+            value={alertText}
+            onChange={(e) => setAlertText(e.target.value)}
+            placeholder="Enter a new alert..."
+            className="flex-grow border p-2 rounded"
+          />
+          <Button
+            onClick={saveAlert}
+            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+          >
+            Save
+          </Button>
         </div>
-      ) : (
-        <p className="text-gray-500 text-center">No alerts yet. Create one above!</p>
-      )}
+
+        {alerts.length > 0 ? (
+          <div className="p-4 border rounded">
+            <h2 className="text-lg font-semibold mb-2">Your Alerts</h2>
+            <ul className="list-disc list-inside space-y-1">
+              {alerts.map((alert, index) => (
+                <li key={alert.id || index} className="text-gray-800">
+                  {alert.alert}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center">No alerts yet. Create one above!</p>
+        )}
+      </div>
+      <div className="max-w-xl mx-auto mt-10 p-6 rounded shadow">
+        <h1 className="text-2xl font-semibold mb-4 text-center">Current Balance</h1>
+
+        <div className="flex items-center gap-2 mb-6">
+          <p>
+
+          </p>
+        </div>
+
+        {alerts.length > 0 ? (
+          <div className="p-4 border rounded">
+            <h2 className="text-lg font-semibold mb-2">Your Alerts</h2>
+            <ul className="list-disc list-inside space-y-1">
+              {alerts.map((alert, index) => (
+                <li key={alert.id || index} className="text-gray-800">
+                  {alert.alert}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center">No alerts yet. Create one above!</p>
+        )}
+      </div>
     </div>
   );
 };
