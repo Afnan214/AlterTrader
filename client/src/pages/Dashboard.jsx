@@ -76,21 +76,19 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen  p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
-        Trading Dashboard
-      </h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+    <div className="min-h-[calc(100vh-4rem)] p-6 bg-gradient-to-b from-gray-900 to-gray-950 text-gray-100">
+      <div className="max-w-[1200px] mx-auto flex flex-col lg:flex-row gap-6 justify-center items-start">
+        {/* LEFT COLUMN */}
+        <div className="flex flex-col gap-6 w-full lg:w-[60%]">
           <AlertsPanel
             alerts={alerts}
             user={user}
             refreshAlerts={() => fetchAlerts(user)}
           />
-
         </div>
-        <div className="flex flex-col gap-6 ">
+
+        {/* RIGHT COLUMN */}
+        <div className="flex flex-col gap-6 w-full lg:w-[35%]">
           <BalanceCard balance={balance} />
           <TransactionsPanel transactions={transactions} />
         </div>

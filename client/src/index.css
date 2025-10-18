@@ -9,3 +9,33 @@ body,
   height: 100%;
   width: 100%;
 }
+
+/* Dark-mode base */
+body {
+  background-color: #0b0f15;
+  /* near-black */
+  color: #e6eef8;
+  /* light blue-ish for readability */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Thin, styled scrollbars for panels */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Target all input fields and text areas */
+* {
+  caret-color: transparent;
+}
