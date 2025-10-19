@@ -47,3 +47,6 @@ Users can create custom **Trackers** (for specific stocks, companies, or economi
    The decision and summary are sent instantly to the user through WhatsApp/SMS.
 
 ---
+
+## 🎨 System Design
+![Alt text]("/public/design.png" "a title")
