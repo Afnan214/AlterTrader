@@ -33,7 +33,7 @@ export default function Navbar() {
     <nav className="bg-gray-900 text-white px-6 py-3 flex justify-between items-center shadow-md">
       {/* Left section: brand + links */}
       <div className="flex items-center space-x-8">
-        <h1 className="text-xl font-semibold tracking-tight">Alert Trader</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Trade Alert</h1>
 
         <div className="hidden sm:flex space-x-6 text-sm">
           <Link
@@ -59,14 +59,12 @@ export default function Navbar() {
             {!user ? (
               <>
                 <MenuItem>
-
                   <Link
                     to="/signup"
                     className={`block px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100`}
                   >
                     Signup
                   </Link>
-
                 </MenuItem>
                 <MenuItem>
                   <Link

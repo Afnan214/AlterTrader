@@ -1,12 +1,12 @@
 {
-  "scrapedAt": "2025-10-18T21:08:47.994Z",
+  "scrapedAt": "2025-10-19T02:47:22.464Z",
   "url": "http://localhost:5174/",
   "count": 1,
   "alerts": [
     {
       "tag": "p",
       "classList": "alert text-gray-700",
-      "text": "HACK",
+      "text": "Amazon has lost the lawsuit...",
       "links": []
     }
   ]
