@@ -1,0 +1,23 @@
+node_modules
+npm-debug.log
+.DS_Store
+
+# Local env & secrets
+.env
+*.pem
+*.key
+*.crt
+
+# VCS & editor junk
+.git
+.gitignore
+.gitlab-ci.yml
+.vscode
+.idea
+
+# OS / build artifacts
+coverage
+dist
+build
+logs
+*.log

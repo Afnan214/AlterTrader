@@ -6,14 +6,14 @@ import postRoutes from "./routes/postRoutes.js";
 import cors from "cors";
 dotenv.config();
 
-const origins = ["http://localhost:5173", "http://localhost:5174"];
+const origins = [process.env.FRONTEND_URL, "http://localhost:5173", "http://localhost:5174"];
 
 const app = express();
 app.use(express.json());
 
 app.use(
   cors({
-    origin: "http://localhost:5174",
+    origin: origins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -29,5 +29,7 @@ app.use("/api/posts", postRoutes);
 
 app.get("/", (_req, res) => res.send("API running..."));
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server listening on http://0.0.0.0:${PORT}`);
+});

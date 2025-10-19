@@ -1,6 +1,7 @@
-require("dotenv").config();
+// server/config/config.js  (ESM)
+import "dotenv/config";
 
-module.exports = {
+export default {
     development: {
         username: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
@@ -8,9 +9,7 @@ module.exports = {
         host: process.env.DB_HOST,
         port: process.env.DB_PORT || 5432,
         dialect: "postgres",
-        dialectOptions: {
-            ssl: { require: true, rejectUnauthorized: false },
-        },
+        dialectOptions: { ssl: { require: true, rejectUnauthorized: false } },
     },
     production: {
         username: process.env.DB_USER,
@@ -19,8 +18,6 @@ module.exports = {
         host: process.env.DB_HOST,
         port: process.env.DB_PORT || 5432,
         dialect: "postgres",
-        dialectOptions: {
-            ssl: { require: true, rejectUnauthorized: false },
-        },
+        dialectOptions: { ssl: { require: true, rejectUnauthorized: false } },
     },
 };

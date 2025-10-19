@@ -4,9 +4,10 @@ import fs from "fs";
 import path from "path";
 import puppeteer from "puppeteer";
 import { gemini, triggerAlerts } from "./gemini.js";
+import dotenv from "dotenv";
 
 // ---------------------- Config ----------------------
-const BASE_URL = "http://localhost:5174/";
+const BASE_URL = process.env.BASE_URL;
 const OUT_DIR = "out";
 const USER_AGENT = "MockNewsScraper/1.0";
 const SCRAPE_INTERVAL = 10 * 1000; // 10 seconds

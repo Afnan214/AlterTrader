@@ -25,7 +25,7 @@ export default function PostForm({ closeModal }) {
         imageUrl = URL.createObjectURL(image);
       }
 
-      const response = await fetch("http://localhost:3001/api/posts", {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,11 +73,10 @@ export default function PostForm({ closeModal }) {
       <button
         type="submit"
         disabled={loading}
-        className={`w-full py-2 rounded-lg text-white transition ${
-          loading
+        className={`w-full py-2 rounded-lg text-white transition ${loading
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-blue-600 hover:bg-blue-700"
-        }`}
+          }`}
       >
         {loading ? "Posting..." : "Post"}
       </button>

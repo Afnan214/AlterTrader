@@ -19,11 +19,11 @@ dotenv.config();
 //create express app
 const app = express();
 const httpServer = createServer(app);
-
+const origins = ["http://localhost:5173", process.env.FRONTEND_URL]
 // Initialize Socket.IO with CORS
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: origins,
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -32,7 +32,7 @@ const io = new Server(httpServer, {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Important for Twilio webhooks
 
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Store user conversation states (in production, use Redis or database)
 const userStates = {};
@@ -41,10 +41,10 @@ const userStates = {};
 export const updateUserState = (phoneNumber, stateUpdate) => {
   userStates[phoneNumber] = { ...userStates[phoneNumber], ...stateUpdate };
 };
-//CORS configuration
-const origins = ["http://localhost:5173"];
+// //CORS configuration
+// const origins = [process.env.FRONTEND_URL, "http://localhost:5173"];
 
-app.use(cors({ origin: origins }));
+// app.use(cors({ origin: origins }));
 
 // Socket.IO authentication and connection handling
 io.on("connection", async (socket) => {
@@ -147,8 +147,11 @@ app.get("/webhook/whatsapp", async (req, res) => {
 //   }
 // });
 
-httpServer.listen(port, () => {
-  console.log(`🚀 Server listening on port ${port}`);
-  console.log(`📱 WhatsApp webhook: http://localhost:${port}/webhook/whatsapp`);
-  console.log(`🔌 Socket.IO server ready`);
+// httpServer.listen(port, () => {
+//   console.log(`🚀 Server listening on port ${port}`);
+//   console.log(`📱 WhatsApp webhook: http://localhost:${port}/webhook/whatsapp`);
+//   console.log(`🔌 Socket.IO server ready`);
+// });
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server listening on http://0.0.0.0:${PORT}`);
 });
