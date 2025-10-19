@@ -49,4 +49,4 @@ Users can create custom **Trackers** (for specific stocks, companies, or economi
 ---
 
 ## 🎨 System Design
-![Alt text]("./public/design.png" "a title")
+![Alt text](./public/design.png "Architecture")
